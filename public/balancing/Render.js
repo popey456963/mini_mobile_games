@@ -7,7 +7,7 @@ export default class Render {
     this.interval = setInterval(this.tick.bind(this), 1000 / 60)
 
     this.reset()
-    this.render()
+    this.render(true)
   }
 
   reset() {
@@ -22,11 +22,14 @@ export default class Render {
       time: 0,
       ended: false,
       pause: 60,
+      strength: 0.001,
     }
   }
 
   onClick(event) {
     const loc = Loc.fromAbsolute(this.canvas, event.x, event.y)
+
+    console.log(event.width, event.height, event, loc)
 
     if (Math.sqrt((loc.x - 50) * (loc.x - 50) + (loc.y - 15) * (loc.y - 15)) < 10) {
       this.reset()
@@ -35,18 +38,16 @@ export default class Render {
     const team = loc.x < 50
     const direction = loc.y < 50
 
-    let strength = 0.001
-
-    //console.log(team, direction)
+    console.log(team, direction)
 
     if (team) {
-      this.state.a_speed += (direction * 2 - 1) * strength
+      this.state.a_speed += (direction * 2 - 1) * this.state.strength
     } else {
-      this.state.b_speed += (direction * 2 - 1) * strength
+      this.state.b_speed += (direction * 2 - 1) * this.state.strength
     }
   }
 
-  render() {
+  render(shouldRequestAnimationFrame = false) {
     if (!this.canvas) return
 
     this.canvas.clear()
@@ -57,8 +58,8 @@ export default class Render {
 
     let lineOptions = {
       strokeStyle: [255, 200, 200, 200],
-      shadowBlur: 40,
-      shadowColor: '#aaaaaa',
+      // shadowBlur: 40,
+      // shadowColor: '#aaaaaa',
       lineWidth: 4,
       lineCap: 'round',
     }
@@ -79,8 +80,8 @@ export default class Render {
 
     lineOptions = {
       strokeStyle: [200, 255, 200, 200],
-      shadowBlur: 40,
-      shadowColor: '#aaaaaa',
+      // shadowBlur: 40,
+      // shadowColor: '#aaaaaa',
       lineWidth: 4,
       lineCap: 'round',
     }
@@ -107,6 +108,10 @@ export default class Render {
         fillStyle: [85, 80, 255, 255],
       })
     }
+
+    if (shouldRequestAnimationFrame) {
+      window.requestAnimationFrame(() => this.render(true))
+    }
   }
 
   renderClock() {
@@ -122,15 +127,15 @@ export default class Render {
       1.5 * Math.PI + (2 * Math.PI * (this.state.time % 60000)) / 60000,
       {
         lineWidth: 10,
-        shadowBlur: 30,
-        shadowColor: '#5550FF',
+        // shadowBlur: 30,
+        // shadowColor: '#5550FF',
         shadowOffsetX: 0,
         adowOffsetY: 0,
         lineCap: 'round',
       }
     )
 
-    this.canvas.drawText(new Loc(50, 50), String(parseInt(this.state.time)), {
+    this.canvas.drawText(new Loc(50, 50), String(parseInt(this.state.time / 1000)), {
       font: "20vmin 'Tilt Neon'",
       fillStyle: [85, 80, 255, 255],
     })
@@ -183,7 +188,8 @@ export default class Render {
     //console.log('speed change', Math.sin(this.state.a) * 0.0002)
     this.state.a_speed += Math.sin(this.state.a) * 0.0002 * this.state.gravity
     this.state.b_speed += Math.sin(this.state.b) * 0.0002 * this.state.gravity
-    this.state.gravity += 0.01
+    this.state.gravity += 0.005
+    this.state.strength += 0.00001
     this.calculate_points()
     this.state.time += 1000 / 60
   }
